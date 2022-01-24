@@ -1,8 +1,5 @@
-let myMap;
-let canvas;
 const mappa = new Mappa('Leaflet');
-var colors = ['#fff7fb'];
-
+const DATA_POINTS = [];
 const STATES = [
   {
     name: 'New South Wales',
@@ -37,7 +34,6 @@ const STATES = [
     coords: [-19.4914, 132.551],
   },
 ];
-
 const options = {
   lat: -28.2744,
   lng: 133.7751,
@@ -55,70 +51,56 @@ function setup() {
   canvas = createCanvas(windowWidth, windowHeight);
   myMap = mappa.tileMap(options);
   myMap.overlay(canvas);
-
-  // fill(200, 100, 100);
-
   polygons = myMap.geoJSON(geoJSON, 'Polygon');
   multiPolygons = myMap.geoJSON(geoJSON, 'MultiPolygon');
-
-  // Only redraw the point when the map changes and not every frame.
-  // myMap.onChange(drawPoint);
+  for (const dp of postCodeData) {
+    DATA_POINTS.push(new DP(dp.lat, dp.lng, dp.Suburb));
+  }
 }
 
 function draw() {
   clear();
-
-  //  For all polygons loop through the array and create a new Shape.
   stroke(0);
   strokeWeight(0.3);
   fill(255);
-  // For all multiPolygons loop through the array and create a new Shape.
-  for (var i = 0; i < multiPolygons.length; i++) {
-    for (var k = 0; k < multiPolygons[i].length; k++) {
+  for (let i = 0; i < multiPolygons.length; i++) {
+    for (let k = 0; k < multiPolygons[i].length; k++) {
       beginShape();
-      for (var j = 0; j < multiPolygons[i][k][0].length; j++) {
-        //      for (var j = 0; j < multiPolygons[i][k].length; j++){
-        var pos = myMap.latLngToPixel(
+      for (let j = 0; j < multiPolygons[i][k][0].length; j++) {
+        const pos = myMap.latLngToPixel(
           multiPolygons[i][k][0][j][1],
           multiPolygons[i][k][0][j][0]
         );
-        //        var pos = myMap.latLngToPixel(multiPolygons[i][k][j][1], multiPolygons[i][k][j][0]);
         vertex(pos.x, pos.y);
       }
       endShape();
     }
   }
-  for (var i = 0; i < polygons.length; i++) {
+  for (let i = 0; i < polygons.length; i++) {
     beginShape();
-    for (var j = 0; j < polygons[i][0].length; j++) {
-      var pos = myMap.latLngToPixel(polygons[i][0][j][1], polygons[i][0][j][0]);
+    for (let j = 0; j < polygons[i][0].length; j++) {
+      const pos = myMap.latLngToPixel(
+        polygons[i][0][j][1],
+        polygons[i][0][j][0]
+      );
       vertex(pos.x, pos.y);
     }
     endShape();
   }
 
-  // for(var i = 0; i < geoJSON.features; i++) {
-  //   text('NSW')
-  // }
-  for (const state of STATES) {
-    fill(0);
-    const pos = myMap.latLngToPixel(state.coords[0], state.coords[1]);
-    textSize(16);
-    textAlign(CENTER, CENTER);
-    text(state.name, pos.x, pos.y);
+  if (myMap.zoom() > options.zoom) {
+    for (const dp of DATA_POINTS) {
+      dp.display();
+    }
   }
 
-  for(const dp of postCodeData) {
-    const pos = myMap.latLngToPixel(dp.lat, dp.lng);
-    fill(255, 0, 0, 50)
-    noStroke()
-    ellipse(pos.x, pos.y, 10, 10)
+  if (myMap.zoom() <= options.zoom) {
+    for (const state of STATES) {
+      fill(0);
+      const pos = myMap.latLngToPixel(state.coords[0], state.coords[1]);
+      textSize(16);
+      textAlign(CENTER, CENTER);
+      text(state.name, pos.x, pos.y);
+    }
   }
-}
-
-function drawPoint() {
-  clear();
-
-  const nigeria = myMap.latLngToPixel(11.396396, 5.076543);
-  ellipse(nigeria.x, nigeria.y, 20, 20);
 }
